@@ -16,6 +16,7 @@ module Net; module SSH; module Authentication
   class Agent
     include Net::SSH::Authentication::AgentProtocolConstants
     include Loggable
+    @default_key_opts = {:comment => "", :confirm => false, :lifetime => 0}
 
     # A simple module for extending keys, to allow comments to be specified
     # for them.
@@ -115,7 +116,30 @@ module Net; module SSH; module Authentication
       return reply.read_string
     end
 
-    def add_key(key, opt={:comment => "", :confirm => false, :lifetime => 0})
+    def add_key(key, opt=@default_key_opts)
+      type, reply = nil, nil
+
+      case key.class.to_s
+      when "OpenSSL::PKey::RSA"
+        type, reply = add_rsa_key key, opt
+      else
+        raise NotImplementedError, "Only RSA keys are supported, not #{key.class}"
+      end
+      type
+    end
+
+    def add_rsa_key(rsa_key, opt=@default_key_opts)
+      p = rsa_key.params
+      send_and_wait(SSH2_AGENTC_ADD_IDENTITY,
+        :string, "ssh-rsa",
+        :bignum, p['n'],
+        :bignum, p['e'],
+        :bignum, p['d'],
+        :bignum, p['iqmp'],
+        :bignum, p['p'],
+        :bignum, p['q'],
+        :string, opt[:comment]
+      )
     end
 
     private

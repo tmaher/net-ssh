@@ -123,15 +123,13 @@ module Authentication
       socket.expect do |s, type, buffer |
         assert_equal SSH2_AGENTC_ADD_IDENTITY, type
         assert_equal buffer.read_string, "ssh-rsa"
-        params = {}
         [:n, :e, :d, :iqmp, :p, :q].each do |param|
-          params[:param] = buffer.read_bignum
+          assert_equal buffer.read_bignum, key_rsa.params[param.to_s]
         end
         assert_equal comment, buffer.read_string
+        s.return(SSH_AGENT_SUCCESS)
       end
-
-      result = agent.add_key key_rsa, :comment => comment
-      assert_equal result, SSH_AGENT_SUCCESS
+      assert_equal agent.add_key(key_rsa, :comment => comment), SSH_AGENT_SUCCESS
     end
 
     def test_close_should_close_socket
