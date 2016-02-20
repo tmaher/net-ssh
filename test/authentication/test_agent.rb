@@ -116,6 +116,24 @@ module Authentication
       assert_equal "Okay, but not the best", result.last.comment
     end
 
+    def test_should_add_rsa_key
+      key_rsa = OpenSSL::PKey::RSA.new(2048)
+      comment = "/path/to/fake/key"
+
+      socket.expect do |s, type, buffer |
+        assert_equal SSH2_AGENTC_ADD_IDENTITY, type
+        assert_equal buffer.read_string, "ssh-rsa"
+        params = {}
+        [:n, :e, :d, :iqmp, :p, :q].each do |param|
+          params[:param] = buffer.read_bignum
+        end
+        assert_equal comment, buffer.read_string
+      end
+
+      result = agent.add_key key_rsa, :comment => comment
+      assert_equal result, SSH_AGENT_SUCCESS
+    end
+
     def test_close_should_close_socket
       socket.expects(:close)
       agent.close

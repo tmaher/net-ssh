@@ -115,6 +115,9 @@ module Net; module SSH; module Authentication
       return reply.read_string
     end
 
+    def add_key(key, opt={:comment => "", :confirm => false, :lifetime => 0})
+    end
+
     private
 
     # Returns the agent socket factory to use.
