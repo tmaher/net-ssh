@@ -26,7 +26,7 @@ module Authentication
 
     def test_negotiate_should_raise_error_if_ssh2_agent_response_recieved
       socket.expect do |s, type, buffer|
-        assert_equal SSH2_AGENT_REQUEST_VERSION, type
+        assert_equal SSH_AGENTC_REQUEST_RSA_IDENTITIES, type
         assert_equal Net::SSH::Transport::ServerVersion::PROTO_VERSION, buffer.read_string
         s.return(SSH2_AGENT_VERSION_RESPONSE)
       end
@@ -35,7 +35,7 @@ module Authentication
 
     def test_negotiate_should_raise_error_if_response_was_unexpected
       socket.expect do |s, type, buffer|
-        assert_equal SSH2_AGENT_REQUEST_VERSION, type
+        assert_equal SSH_AGENTC_REQUEST_RSA_IDENTITIES, type
         s.return(255)
       end
       assert_raises(Net::SSH::Authentication::AgentNotAvailable) { agent.negotiate! }
@@ -43,7 +43,7 @@ module Authentication
 
     def test_negotiate_should_be_successful_with_expected_response
       socket.expect do |s, type, buffer|
-        assert_equal SSH2_AGENT_REQUEST_VERSION, type
+        assert_equal SSH_AGENTC_REQUEST_RSA_IDENTITIES, type
         s.return(SSH_AGENT_RSA_IDENTITIES_ANSWER)
       end
       assert_nothing_raised { agent(:connect).negotiate! }
@@ -51,7 +51,7 @@ module Authentication
 
     def test_identities_should_fail_if_SSH_AGENT_FAILURE_recieved
       socket.expect do |s, type, buffer|
-        assert_equal SSH2_AGENT_REQUEST_IDENTITIES, type
+        assert_equal SSH2_AGENTC_REQUEST_IDENTITIES, type
         s.return(SSH_AGENT_FAILURE)
       end
       assert_raises(Net::SSH::Authentication::AgentError) { agent.identities }
@@ -59,7 +59,7 @@ module Authentication
 
     def test_identities_should_fail_if_SSH2_AGENT_FAILURE_recieved
       socket.expect do |s, type, buffer|
-        assert_equal SSH2_AGENT_REQUEST_IDENTITIES, type
+        assert_equal SSH2_AGENTC_REQUEST_IDENTITIES, type
         s.return(SSH2_AGENT_FAILURE)
       end
       assert_raises(Net::SSH::Authentication::AgentError) { agent.identities }
@@ -67,7 +67,7 @@ module Authentication
 
     def test_identities_should_fail_if_SSH_COM_AGENT2_FAILURE_recieved
       socket.expect do |s, type, buffer|
-        assert_equal SSH2_AGENT_REQUEST_IDENTITIES, type
+        assert_equal SSH2_AGENTC_REQUEST_IDENTITIES, type
         s.return(SSH_COM_AGENT2_FAILURE)
       end
       assert_raises(Net::SSH::Authentication::AgentError) { agent.identities }
@@ -75,7 +75,7 @@ module Authentication
 
     def test_identities_should_fail_if_response_is_not_SSH2_AGENT_IDENTITIES_ANSWER
       socket.expect do |s, type, buffer|
-        assert_equal SSH2_AGENT_REQUEST_IDENTITIES, type
+        assert_equal SSH2_AGENTC_REQUEST_IDENTITIES, type
         s.return(255)
       end
       assert_raises(Net::SSH::Authentication::AgentError) { agent.identities }
@@ -86,7 +86,7 @@ module Authentication
       key2 = OpenSSL::PKey::DSA.new(512)
 
       socket.expect do |s, type, buffer|
-        assert_equal SSH2_AGENT_REQUEST_IDENTITIES, type
+        assert_equal SSH2_AGENTC_REQUEST_IDENTITIES, type
         s.return(SSH2_AGENT_IDENTITIES_ANSWER, :long, 2, :string, Net::SSH::Buffer.from(:key, key1), :string, "My favorite key", :string, Net::SSH::Buffer.from(:key, key2), :string, "Okay, but not the best")
       end
 
@@ -104,7 +104,7 @@ module Authentication
       key3 = OpenSSL::PKey::DSA.new(512)
 
       socket.expect do |s, type, buffer|
-        assert_equal SSH2_AGENT_REQUEST_IDENTITIES, type
+        assert_equal SSH2_AGENTC_REQUEST_IDENTITIES, type
         s.return(SSH2_AGENT_IDENTITIES_ANSWER, :long, 3, :string, Net::SSH::Buffer.from(:key, key1), :string, "My favorite key", :string, Net::SSH::Buffer.from(:key, key2), :string, "bad", :string, Net::SSH::Buffer.from(:key, key3), :string, "Okay, but not the best")
       end
 
@@ -143,7 +143,7 @@ module Authentication
 
     def test_sign_should_return_signed_data_from_agent
       socket.expect do |s,type,buffer|
-        assert_equal SSH2_AGENT_SIGN_REQUEST, type
+        assert_equal SSH2_AGENTC_SIGN_REQUEST, type
         assert_equal key.to_blob, Net::SSH::Buffer.new(buffer.read_string).read_key.to_blob
         assert_equal "hello world", buffer.read_string
         assert_equal 0, buffer.read_long

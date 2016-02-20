@@ -59,13 +59,13 @@ module Net; module SSH; module Authentication
     # if the version could not be negotiated successfully.
     def negotiate!
       # determine what type of agent we're communicating with
-      type, body = send_and_wait(SSH2_AGENT_REQUEST_VERSION, :string, Transport::ServerVersion::PROTO_VERSION)
+      type, body = send_and_wait(SSH_AGENTC_REQUEST_RSA_IDENTITIES, :string, Transport::ServerVersion::PROTO_VERSION)
 
       if type == SSH2_AGENT_VERSION_RESPONSE
         raise AgentNotAvailable, "SSH2 agents are not yet supported"
       elsif type == SSH2_AGENT_FAILURE
         debug { "Unexpected response type==#{type}, this will be ignored" }
-      elsif type != SSH_AGENT_RSA_IDENTITIES_ANSWER1 && type != SSH_AGENT_RSA_IDENTITIES_ANSWER2
+      elsif type != SSH_AGENT_RSA_IDENTITIES_ANSWER && type != SSH_AGENT_FAILURE
         raise AgentNotAvailable, "unknown response from agent: #{type}, #{body.to_s.inspect}"
       end
     end
@@ -74,7 +74,7 @@ module Net; module SSH; module Authentication
     # Each key returned is augmented with a +comment+ property which is set
     # to the comment returned by the agent for that key.
     def identities
-      type, body = send_and_wait(SSH2_AGENT_REQUEST_IDENTITIES)
+      type, body = send_and_wait(SSH2_AGENTC_REQUEST_IDENTITIES)
       raise AgentError, "could not get identity count" if agent_failed(type)
       raise AgentError, "bad authentication reply: #{type}" if type != SSH2_AGENT_IDENTITIES_ANSWER
 
@@ -104,7 +104,7 @@ module Net; module SSH; module Authentication
     # Using the agent and the given public key, sign the given data. The
     # signature is returned in SSH2 format.
     def sign(key, data)
-      type, reply = send_and_wait(SSH2_AGENT_SIGN_REQUEST, :string, Buffer.from(:key, key), :string, data, :long, 0)
+      type, reply = send_and_wait(SSH2_AGENTC_SIGN_REQUEST, :string, Buffer.from(:key, key), :string, data, :long, 0)
 
       if agent_failed(type)
         raise AgentError, "agent could not sign data with requested identity"
