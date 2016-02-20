@@ -14,6 +14,7 @@ module Net; module SSH; module Authentication
   # This means that although it behaves like a SSH1 client, it also has
   # some SSH2 functionality (like signing data).
   class Agent
+    include Net::SSH::Authentication::AgentProtocolConstants
     include Loggable
 
     # A simple module for extending keys, to allow comments to be specified
@@ -21,21 +22,6 @@ module Net; module SSH; module Authentication
     module Comment
       attr_accessor :comment
     end
-
-    SSH2_AGENT_REQUEST_VERSION    = 1
-    SSH2_AGENT_REQUEST_IDENTITIES = 11
-    SSH2_AGENT_IDENTITIES_ANSWER  = 12
-    SSH2_AGENT_SIGN_REQUEST       = 13
-    SSH2_AGENT_SIGN_RESPONSE      = 14
-    SSH2_AGENT_FAILURE            = 30
-    SSH2_AGENT_VERSION_RESPONSE   = 103
-
-    SSH_COM_AGENT2_FAILURE        = 102
-
-    SSH_AGENT_REQUEST_RSA_IDENTITIES = 1
-    SSH_AGENT_RSA_IDENTITIES_ANSWER1 = 2
-    SSH_AGENT_RSA_IDENTITIES_ANSWER2 = 5
-    SSH_AGENT_FAILURE                = 5
 
     # The underlying socket being used to communicate with the SSH agent.
     attr_reader :socket
